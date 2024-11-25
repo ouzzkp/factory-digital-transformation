@@ -31,10 +31,16 @@ res.json({ token });
 
 exports.validateToken = (req, res) => {
     const token = req.headers['authorization'];
-    if (!token) return res.status(401).json({ message: 'Token is required, no token provided' });
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+  
+    try {
+      // Token'dan "Bearer" kısmını ayır
+      const decoded = jwt.verify(token.split(' ')[1], SECRET_KEY);
+      res.json({ username: decoded.username }); // Doğrulama başarılıysa kullanıcıyı döndür
+    } catch (err) {
+      console.error('Token Validation Error:', err.message); // Hata detayını logla
+      res.status(403).json({ message: 'Invalid Token' });
+    }
+  };
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if (err) return res.status(403).json({ message: 'Failed to authenticate token' });
-        res.json({ message: decoded.username });
-    });
-};
+
